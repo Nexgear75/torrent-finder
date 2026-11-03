@@ -3,3 +3,4 @@ backend/target/
 tui/node_modules/
 .DS_Store
 *.log
+BRIEF.md

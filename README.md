@@ -25,21 +25,36 @@ Type `tf` and search. Behind the scenes tf runs its own private [Jackett](https:
 - on first launch the default public sources are configured automatically; manage them later with `I` (no web UI, no API key to copy);
 - everything stops when tf exits — `q`, Ctrl-C, closing the terminal, even `kill -9` (the backend sees its stdin close).
 
-`dl-daemon` is woken up when a result is sent and keeps its own lifecycle: the download continues after tf exits; open `dl` to follow it.
+`dl-daemon` is woken up when a result is sent and keeps its own lifecycle: the download continues after tf exits (open `dl` to follow it), and the daemon stops by itself once everything is done.
 
 ## Install
 
-Requirements: `cargo` and `bun` to build, [`dl`](https://github.com/Nexgear75/dl) to download (a `dl-daemon` whose `add` accepts `select: false`, otherwise multi-file torrents wait for a file choice in dl), Homebrew (or an installed `jackett`).
+macOS (Apple Silicon or Intel), one command:
 
 ```sh
-./scripts/install.sh          # installs tf and tf-backend into ~/.local/bin
+curl -fsSL https://raw.githubusercontent.com/Nexgear75/torrent-finder/master/install.sh | bash
 ```
+
+It asks whether to install **tf**, [**dl**](https://github.com/Nexgear75/dl) (the download manager tf sends results to) or both, installs what they need with Homebrew (Jackett, aria2, yt-dlp, ffmpeg; Homebrew itself if missing), puts the binaries in `~/.local/bin` and adds that folder to your `PATH`.
+
+Non-interactive: `… | bash -s -- tf dl` (or `--yes`). Uninstall: `… | bash -s -- --uninstall`.
+
+### Updates
+
+Nothing to do. At most once an hour tf (and dl) check for a new release in the background, download it, verify its checksum and swap the binaries; the next launch runs the new version and says so. Jackett is upgraded with Homebrew once a day, so its site definitions stay current.
+
+`tf update` updates tf, dl and Jackett right away. `TF_NO_AUTOUPDATE=1` turns automatic updates off.
+
+### From source
+
+Requires `cargo` and `bun`: `./scripts/install.sh` builds and installs into `~/.local/bin`.
 
 ## Usage
 
 ```sh
 tf                  # open and type a search
 tf elden ring       # open and search right away
+tf update           # update now
 ```
 
 ### Keys
@@ -47,18 +62,18 @@ tf elden ring       # open and search right away
 | Normal mode | |
 |---|---|
 | `/` `i` | new search (`↑` `↓` browse history, `tab` changes category) |
-| `j` `k` / `↓` `↑` | move |
-| `gg` / `G` | top / bottom |
-| `ctrl-d` / `ctrl-u` | half page down / up |
+| `↓` `↑` / `j` `k` | move |
+| `Home` `End` / `gg` `G` | top / bottom |
+| `PgDn` `PgUp` / `ctrl-d` `ctrl-u` | page down / up |
 | `⏎` | send to dl (dl's download folder) |
 | `D` | send to dl, choosing the folder (path completion) |
 | `space` | mark several results, then `⏎` sends them all · `u` clears marks |
-| `tab` / `1`…`8` | category: ALL GAMES MOVIES TV MUSIC APPS BOOKS ANIME |
+| `←` `→` / `tab` / `1`…`8` | category: ALL GAMES MOVIES TV MUSIC APPS BOOKS ANIME |
 | `s` | sort: seeders → size → date → name |
 | `f` | filters: min seeders, min/max size, sources |
 | `o` | open the torrent page in the browser |
 | `y` | copy the magnet |
-| `I` | sources: `space` on/off, `a` add a public tracker, `dd` remove, `o` website |
+| `I` | sources: `space` on/off, `a` add a public tracker, `⌫` / `dd` remove, `o` website |
 | `?` | help |
 | `q` | quit (stops the search engine) |
 

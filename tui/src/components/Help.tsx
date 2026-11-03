@@ -7,7 +7,7 @@ const SECTIONS: [string, [string, string][]][] = [
     'Search',
     [
       ['/  i', 'search · ↑↓ history'],
-      ['tab  1…8', 'category'],
+      ['← →  tab  1…8', 'category'],
       ['s', 'cycle sort'],
       ['f', 'filters'],
       ['I', 'manage sources'],
@@ -16,9 +16,9 @@ const SECTIONS: [string, [string, string][]][] = [
   [
     'Navigation',
     [
-      ['j / k  ↓ ↑', 'move'],
-      ['gg / G', 'top / bottom'],
-      ['ctrl-d / ctrl-u', 'half page down / up'],
+      ['↓ ↑  j / k', 'move'],
+      ['home end  gg G', 'top / bottom'],
+      ['pgdn pgup  ^d ^u', 'page down / up'],
     ],
   ],
   [
@@ -47,7 +47,7 @@ function Section({ title, rows, last }: { title: string; rows: [string, string][
       <Text bold>{title}</Text>
       {rows.map(([k, v]) => (
         <Box key={k} flexShrink={0}>
-          <Box width={16} flexShrink={0}>
+          <Box width={18} flexShrink={0}>
             <Text color={ACCENT}>{k}</Text>
           </Box>
           <Text color={DIM} wrap="truncate">

@@ -145,9 +145,11 @@ const slim = (r: Result) => ({ id: r.id, title: r.title, magnet: r.magnet, link:
 interface Props {
   backend: Backend;
   initialQuery?: string;
+  /** shown once at startup (e.g. "tf updated to v0.2.0") */
+  startNotice?: string;
 }
 
-export function App({ backend, initialQuery }: Props) {
+export function App({ backend, initialQuery, startNotice }: Props) {
   const { exit } = useApp();
   const { columns, rows } = useWindowSize();
   const width = Math.max(50, columns);
@@ -229,6 +231,9 @@ export function App({ backend, initialQuery }: Props) {
   tabRef.current = tab;
 
   const say = useCallback((text: string, level: Notice['level'] = 'info') => setNotice({ text, level }), []);
+  useEffect(() => {
+    if (startNotice) say(startNotice, 'ok');
+  }, []);
 
   // notices fade out
   useEffect(() => {
@@ -745,9 +750,9 @@ export function App({ backend, initialQuery }: Props) {
     if (input === '?') return setMode({ t: 'help' });
     if (input === 'q') return quit();
     if (input === 'I') return openIndexers();
-    if (key.tab) {
+    if (key.tab || key.leftArrow || key.rightArrow) {
       const i = TABS.findIndex((t) => t.key === tab);
-      const n = (i + (key.shift ? TABS.length - 1 : 1)) % TABS.length;
+      const n = (i + (key.shift || key.leftArrow ? TABS.length - 1 : 1)) % TABS.length;
       return setTab(TABS[n].key);
     }
     if (/^[1-8]$/.test(input)) return setTab(TABS[Number(input) - 1].key);
@@ -816,6 +821,8 @@ export function App({ backend, initialQuery }: Props) {
     if (key.escape || input === 'q' || input === 'I') return closeIndexers();
     if (input === 'j' || key.downArrow) return setMode({ ...m, cursor: Math.min(Math.max(0, n - 1), m.cursor + 1) });
     if (input === 'k' || key.upArrow) return setMode({ ...m, cursor: Math.max(0, m.cursor - 1) });
+    if (key.pageDown) return setMode({ ...m, cursor: Math.min(Math.max(0, n - 1), m.cursor + 10) });
+    if (key.pageUp) return setMode({ ...m, cursor: Math.max(0, m.cursor - 10) });
     if (input === 'G' || key.end) return setMode({ ...m, cursor: Math.max(0, n - 1) });
     if (input === 'g' || key.home) {
       if (pend === 'g' || key.home) return setMode({ ...m, cursor: 0 });
@@ -833,7 +840,7 @@ export function App({ backend, initialQuery }: Props) {
       void backend.call('set_indexer', { id: ix.id, enabled }).catch((e) => say((e as Error).message, 'error'));
       return;
     }
-    if (input === 'x') return void removeSourceFlow(ix, m.cursor);
+    if (input === 'x' || key.delete || key.backspace) return void removeSourceFlow(ix, m.cursor);
     if (input === 'd') {
       if (pend === 'd') return void removeSourceFlow(ix, m.cursor);
       pendingKey.current = { k: 'd', at: now };
@@ -935,8 +942,8 @@ export function App({ backend, initialQuery }: Props) {
       if (input === 'k' || key.upArrow) return setMode({ ...m, cursor: Math.max(0, m.cursor - 1) });
       if (input === 'g' || key.home) return setMode({ ...m, cursor: 0 });
       if (input === 'G' || key.end) return setMode({ ...m, cursor: n - 1 });
-      if (key.ctrl && input === 'd') return setMode({ ...m, cursor: Math.min(n - 1, m.cursor + 10) });
-      if (key.ctrl && input === 'u') return setMode({ ...m, cursor: Math.max(0, m.cursor - 10) });
+      if ((key.ctrl && input === 'd') || key.pageDown) return setMode({ ...m, cursor: Math.min(n - 1, m.cursor + 10) });
+      if ((key.ctrl && input === 'u') || key.pageUp) return setMode({ ...m, cursor: Math.max(0, m.cursor - 10) });
       if (m.multi && input === ' ') {
         const checked = [...m.checked];
         checked[m.cursor] = !checked[m.cursor];
@@ -1174,10 +1181,10 @@ export function App({ backend, initialQuery }: Props) {
         : mode.t === 'confirm'
           ? '⏎ y yes · n no'
           : mode.t === 'indexers'
-          ? 'space on/off · a add · dd remove · o website · r refresh · esc back'
+          ? '↑↓ move · space on/off · a add · ⌫ remove · o website · r refresh · esc back'
           : engine.state === 'error' || engine.state === 'stopped'
             ? 'R restart engine · / search · ? help · q quit'
-            : '/ search · ⏎ → dl · D folder · space mark · tab category · s sort · f filter · I sources · ? help · q quit';
+            : '/ search · ⏎ → dl · D folder · space mark · ←→ category · s sort · f filter · I sources · ? help · q quit';
     footer = (
       <>
         {status}
